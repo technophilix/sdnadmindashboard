@@ -36,7 +36,49 @@ import {
   dashboardNASDAQChart,
 } from "variables/charts.js";
 import GaugeChart from 'react-gauge-chart'
+import axios from "axios";
+import {useQuery} from "react-query";
+import {BallTriangle, FidgetSpinner} from "react-loader-spinner";
 function Dashboard() {
+
+
+ const {isLoading, isError, data, error} = useQuery('get-prili-data', () => getpriliminarydata(), {
+
+  enabled:true
+ });
+
+const getpriliminarydata = async () =>{
+
+  return await  axios.get('/')
+
+}
+
+if(isLoading || isError){
+
+
+ return(
+     <div className="content">
+   <div style={{position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+  }}>
+    <FidgetSpinner
+        visible={true}
+        height="80"
+        width="80"
+        ariaLabel="fidget-spinner-loading"
+        wrapperStyle={{}}
+        wrapperClass="fidget-spinner-wrapper"
+    /></div></div>  )
+}else{
+  console.log(data)
+}
+
   return (
     <>
       <div className="content">
@@ -54,7 +96,7 @@ function Dashboard() {
                     <div className="numbers">
                       <p className="card-category">Storage
                         </p>
-                      <CardTitle tag="p">150GB</CardTitle>
+                      <CardTitle tag="p">{data.data.data['totaldisk']}GB</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -63,7 +105,7 @@ function Dashboard() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                  <i className="fas fa-sync-alt" /> 1% of storage used
+                  <i className="fas fa-sync-alt" /> {data.data.data['usedisk']} GB of storage used
                 </div>
               </CardFooter>
             </Card>
@@ -80,7 +122,7 @@ function Dashboard() {
                   <Col md="8" xs="7">
                     <div className="numbers">
                       <p className="card-category">Temperature</p>
-                      <CardTitle tag="p">30&deg; C</CardTitle>
+                      <CardTitle tag="p">{((Number(data.data.data['temperaturesensor1'])+Number(data.data.data['temperaturesensor2'])+Number(data.data.data['temperaturesensor3'])+Number(data.data.data['temperaturesensor4'])+ Number(data.data.data['temperaturesensor5'])+Number(data.data.data['temperaturesensor6']))/6). toFixed(2)}&deg; C</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -89,8 +131,7 @@ function Dashboard() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                  <i className="far fa-calendar" /> Within normal range
-                </div>
+                  <i className="far fa-calendar" /> {((Number(data.data.data['temperaturesensor1'])+Number(data.data.data['temperaturesensor2'])+Number(data.data.data['temperaturesensor3'])+Number(data.data.data['temperaturesensor4'])+ Number(data.data.data['temperaturesensor5'])+Number(data.data.data['temperaturesensor6']))/6). toFixed(2) < 40? 'Within normal range':'Temperature is higher than normal'}                </div>
               </CardFooter>
             </Card>
           </Col>
@@ -106,7 +147,7 @@ function Dashboard() {
                   <Col md="8" xs="7">
                     <div className="numbers">
                       <p className="card-category">Power Supplies</p>
-                      <CardTitle tag="p">OK</CardTitle>
+                      <CardTitle tag="p">{Number(data.data.data['power2state'])+Number(data.data.data['power1state'])===1?"OK":"NOT OK"}</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -115,8 +156,7 @@ function Dashboard() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                  <i className="far fa-clock" /> All power supplies are normal
-                </div>
+                  <i className="far fa-clock" /> Source1:{Number(data.data.data['power1state'])?<span style={{color:'green'}}>Active </span>:<span style={{color:'red'}}>De-active</span>} & Source2:{Number(data.data.data['power2state'])?<span style={{color:'green'}}>Active </span>:<span style={{color:'red'}}>De-active</span>}.</div>
               </CardFooter>
             </Card>
           </Col>
@@ -132,7 +172,7 @@ function Dashboard() {
                   <Col md="8" xs="7">
                     <div className="numbers">
                       <p className="card-category">Fan</p>
-                      <CardTitle tag="p">7</CardTitle>
+                      <CardTitle tag="p">2</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -181,7 +221,8 @@ function Dashboard() {
               <CardBody style={{ height: "266px" }}>
                 <GaugeChart id="gauge-chart2"
                             nrOfLevels={20}
-                            percent={0.86}
+                            textColor ={'#000000'}
+                            percent={data.data.data['cpu-usage']*.01}
                 />
               </CardBody>
               <CardFooter>
@@ -206,7 +247,8 @@ function Dashboard() {
               <CardBody style={{ height: "266px" }}>
                 <GaugeChart id="gauge-chart3"
                             nrOfLevels={20}
-                            percent={0.56}
+                            textColor ={'#000000'}
+                            percent={data.data.data['memory']*.01}
                 />
               </CardBody>
               <CardFooter>
@@ -232,7 +274,8 @@ function Dashboard() {
               <CardBody style={{ height: "266px" }}>
                 <GaugeChart id="gauge-chart4"
                             nrOfLevels={20}
-                            percent={0.26}
+                            textColor ={'#000000'}
+                            percent={data.data.data['packetbuffer']}
                 />
               </CardBody>
               <CardFooter>
