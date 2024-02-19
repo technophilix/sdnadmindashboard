@@ -16,9 +16,15 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+import { fetchData } from "../fetch";
 // react plugin used to create charts
-import { Line, Pie } from "react-chartjs-2";
+
+import { Chart, Line } from "react-google-charts";
+
+import ApexCharts from "apexcharts";
+
 // reactstrap components
 import {
   Card,
@@ -35,8 +41,61 @@ import {
   dashboardEmailStatisticsChart,
   dashboardNASDAQChart,
 } from "variables/charts.js";
-import GaugeChart from 'react-gauge-chart'
+import GaugeChart from "react-gauge-chart";
+
+const convertJsonNumbers = (jsonString) => {
+  return JSON.parse(jsonString, (key, value) => {
+    if (/^\d+$/.test(value)) return parseInt(value, 10); // Convert to integer
+    if (/^\d*\.\d+$/.test(value)) return parseFloat(value); // Convert to float
+    if (value.toLowerCase() === "true") return true; // Convert to boolean
+    if (value.toLowerCase() === "false") return false; // Convert to boolean
+    return value; // No conversion
+  });
+};
+
 function Dashboard() {
+  const [temperature, settemperature] = useState(0);
+  const [cpuusage, setcpuusage] = useState(0);
+  const [ethes, setethes] = useState(0);
+  const [temp1sens, settemp1sens] = useState(0);
+  const [temp2sens, settemp2sens] = useState(0);
+  const [temp3sens, settemp3sens] = useState(0);
+  const [temp4sens, settemp4sens] = useState(0);
+  const [temp5sens, settemp5sens] = useState(0);
+  const [temp6sens, settemp6sens] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  function updateData() {
+    setInterval(async () => {
+      const data = await fetchData();
+      settemperature(data.temperaturesensor1);
+      setcpuusage(data["cpu-usage"]);
+      setethes(data.ethes);
+      settemp1sens(data.temperaturesensor1);
+      settemp2sens(data.temperaturesensor2);
+      settemp3sens(data.temperaturesensor3);
+      settemp4sens(data.temperaturesensor4);
+      settemp5sens(data.temperaturesensor5);
+      settemp6sens(data.temperaturesensor6);
+      setCurrentTime(new Date());
+    }, 5000);
+  }
+
+  useEffect(() => {
+    updateData();
+  }, []);
+
+  // to find avg temperature
+  const avgTemp = (
+    (convertJsonNumbers(temp1sens) +
+      convertJsonNumbers(temp2sens) +
+      convertJsonNumbers(temp3sens) +
+      convertJsonNumbers(temp4sens) +
+      convertJsonNumbers(temp5sens) +
+      convertJsonNumbers(temp6sens)) /
+    6
+  ).toFixed(2);
+
   return (
     <>
       <div className="content">
@@ -47,14 +106,13 @@ function Dashboard() {
                 <Row>
                   <Col md="4" xs="5">
                     <div className="icon-big text-center icon-warning">
-                      <i className="fas fa-hdd text-warning"></i>
+                      <i className="fas fa-ethernet text-warning"></i>
                     </div>
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                      <p className="card-category">Storage
-                        </p>
-                      <CardTitle tag="p">150GB</CardTitle>
+                      <p className="card-category">Ethernet</p>
+                      <CardTitle tag="p">{ethes}</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -63,13 +121,13 @@ function Dashboard() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                  <i className="fas fa-sync-alt" /> 1% of storage used
+                  <i className="fas fa-link" /> Go To more details
                 </div>
               </CardFooter>
             </Card>
           </Col>
           <Col lg="3" md="6" sm="6">
-            <Card className="card-stats">
+            <Card className="card-stats" style={{ width: "100%" }}>
               <CardBody>
                 <Row>
                   <Col md="4" xs="5">
@@ -80,7 +138,7 @@ function Dashboard() {
                   <Col md="8" xs="7">
                     <div className="numbers">
                       <p className="card-category">Temperature</p>
-                      <CardTitle tag="p">30&deg; C</CardTitle>
+                      <CardTitle tag="p">{avgTemp}&deg; C</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -132,7 +190,7 @@ function Dashboard() {
                   <Col md="8" xs="7">
                     <div className="numbers">
                       <p className="card-category">Fan</p>
-                      <CardTitle tag="p">7</CardTitle>
+                      <CardTitle tag="p">2</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -175,77 +233,41 @@ function Dashboard() {
           <Col md="4">
             <Card>
               <CardHeader>
-                <CardTitle tag="h5">CPU</CardTitle>
-                <p className="card-category">Last Campaign Performance</p>
+                <CardTitle tag="h5">CPU Usage</CardTitle>
+                <p className="card-category">Current CPU Usage</p>
               </CardHeader>
               <CardBody style={{ height: "266px" }}>
-                <GaugeChart id="gauge-chart2"
-                            nrOfLevels={20}
-                            percent={0.86}
+                <GaugeChart
+                  id="gauge-chart3"
+                  nrOfLevels={20}
+                  percent={cpuusage / 20}
+                  hideText={false}
+                  formatTextValue={(v) => {
+                    return v.toString() + "%";
+                  }}
+                  textColor="#000000"
                 />
               </CardBody>
-              <CardFooter>
-                <div className="legend">
-                  <i className="fa fa-circle text-success" /> Low{" "}
-                  <i className="fa fa-circle text-warning" /> Medium{" "}
-                  <i className="fa fa-circle text-danger" /> High{" "}
-                </div>
-                <hr />
-                <div className="stats">
-                  <i className="fa fa-calendar" /> Some Statistics
-                </div>
-              </CardFooter>
             </Card>
           </Col>
           <Col md="4">
             <Card>
               <CardHeader>
-                <CardTitle tag="h5">Memory</CardTitle>
-                <p className="card-category">Last Campaign Performance</p>
+                <CardTitle tag="h5">Average Temperature</CardTitle>
+                <p className="card-category">Currnet Average Temperature</p>
               </CardHeader>
               <CardBody style={{ height: "266px" }}>
-                <GaugeChart id="gauge-chart3"
-                            nrOfLevels={20}
-                            percent={0.56}
+                <GaugeChart
+                  id="gauge-chart3"
+                  nrOfLevels={25}
+                  percent={avgTemp / 100}
+                  hideText={false}
+                  formatTextValue={(v) => {
+                    return v.toString() + "°C";
+                  }}
+                  textColor="#000000"
                 />
               </CardBody>
-              <CardFooter>
-                <div className="legend">
-                  <i className="fa fa-circle text-success" /> Low{" "}
-                  <i className="fa fa-circle text-warning" /> Medium{" "}
-                  <i className="fa fa-circle text-danger" /> High{" "}
-
-                </div>
-                <hr />
-                <div className="stats">
-                  <i className="fa fa-calendar" /> Some Statistics
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-          <Col md="4">
-            <Card>
-              <CardHeader>
-                <CardTitle tag="h5">Packet Buffers</CardTitle>
-                <p className="card-category">Last Campaign Performance</p>
-              </CardHeader>
-              <CardBody style={{ height: "266px" }}>
-                <GaugeChart id="gauge-chart4"
-                            nrOfLevels={20}
-                            percent={0.26}
-                />
-              </CardBody>
-              <CardFooter>
-                <div className="legend">
-                  <i className="fa fa-circle text-success" /> Low{" "}
-                  <i className="fa fa-circle text-warning" /> Medium{" "}
-                  <i className="fa fa-circle text-danger" /> High{" "}
-                </div>
-                <hr />
-                <div className="stats">
-                  <i className="fa fa-calendar" /> Some Statistics
-                </div>
-              </CardFooter>
             </Card>
           </Col>
         </Row>
