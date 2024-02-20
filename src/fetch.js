@@ -5,7 +5,7 @@ async function fetchData() {
 
   while (true) {
     try {
-      str_data = (await axios.get("http://192.168.0.27:6969/")).data;
+      str_data = (await axios.get("http://192.168.0.27:8001/")).data;
       if (str_data != {}) {
         break;
       } else await new Promise((r) => setTimeout(r, 2000));
