@@ -30,7 +30,7 @@ import axios from "axios";
 import {QueryClient, QueryClientProvider} from "react-query";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-axios.defaults.baseURL = 'http://192.168.0.27:8001/';
+axios.defaults.baseURL = 'http://192.168.0.27:8001';
 // axios.defaults.proxy.host = "https://upchef.in/api/mobile"
 axios.defaults.headers.post['Content-Type'] =
     'application/x-www-form-urlencoded; charset=UTF-8';
